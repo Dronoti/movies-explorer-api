@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
-const UnauthorizedError = require('../errors/UnauthorizedError');
 const ConflictError = require('../errors/ConflictError');
 
 module.exports.getMyUser = (req, res, next) => {
@@ -36,6 +35,7 @@ module.exports.updateUserData = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') next(new BadRequestError('Переданы некорректные данные'));
+      else if (err.code === 11000) next(new ConflictError('Пользователь с данным email уже зарегистрирован'));
       else next(err);
     });
 };
@@ -77,8 +77,5 @@ module.exports.login = (req, res, next) => {
       );
       res.send({ token });
     })
-    .catch((err) => {
-      if (err.message === 'Неправильные почта или пароль') next(new UnauthorizedError(err.message));
-      else next(new BadRequestError('Переданы некорректные данные'));
-    });
+    .catch(next);
 };
